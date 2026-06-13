@@ -270,7 +270,7 @@
       'Histopathology': 2
     };
 
-    const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyBJjNb0dPxqMCO0Rdn4KWylPBIs6W1IFgZ6bHBmSqWKIlrWuKT7zXt3eguHPoNOuLCOg/exec';
+    const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwRJXrELvMzvFpSYNWpJJPNM2dDsNdeOdXYLViYAC6nwcztSf_2TycDVvP7rC_aSMru/exec';
     let selectedDate = dates[0];
     let bookings = [];
     const selectedSlots = {};
@@ -401,7 +401,7 @@
 
     async function loadBookingsFromSheet() {
       try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbzD0raz-pGuIW9FE5-24f4kPy4G1yfAlH-W2uZ4iV6L/dev');
+        const res = await fetch(GOOGLE_SHEETS_WEB_APP_URL);
         const data = await res.json();
 
         if (Array.isArray(data.bookings)) {
