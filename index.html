@@ -173,7 +173,7 @@
         <div class="inline-actions" style="margin-top:1rem;">
           <button class="primary-btn" id="clearMine">Clear my booking</button>
           <button class="ghost-btn" id="saveBooking">Save booking</button>
-                  </div>
+          </div>
 
         <div style="margin-top:1.5rem;">
           <h2>Legend</h2>
@@ -389,7 +389,7 @@
       renderSlots();
     };
 
-    document.getElementById('saveBooking').onclick = () => {
+    document.getElementById('saveBooking').onclick = async () => {
       const me = myIdentity();
       if (!me.name || !me.email || !me.group) {
         alert('Please enter your name, email, and group first.');
@@ -399,7 +399,21 @@
         alert('Please select a slot first.');
         return;
       }
-      alert('Booking saved.');
+      const payload = new URLSearchParams({
+        name: me.name,
+        email: me.email,
+        group: me.group,
+        date: currentDraft.date,
+        shift: currentDraft.shift,
+        section: currentDraft.section,
+        remarks: document.getElementById('remarks') ? document.getElementById('remarks').value : ''
+      });
+      try {
+        const res = await fetch(SHEETS_ENDPOINT, { method: 'POST', mode: 'no-cors', body: payload });
+        alert('Booking sent to Google Sheets.');
+      } catch (err) {
+        alert('Could not send booking.');
+      }
     };
 
     document.getElementById('themeToggle').onclick = () => {
