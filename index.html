@@ -270,7 +270,7 @@
       'Histopathology': 2
     };
 
-    const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwRJXrELvMzvFpSYNWpJJPNM2dDsNdeOdXYLViYAC6nwcztSf_2TycDVvP7rC_aSMru/exec';
+    const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwMQj2UTJ8Qdw-XHxeInRsfY3PadULmuiXMtuR1r5AzcRI1twSXXQfgKHdN_GzwqcIvOw/exec';
     let selectedDate = dates[0];
     let bookings = [];
     const selectedSlots = {};
@@ -399,26 +399,33 @@
       renderSlots();
     }
 
-    async function loadBookingsFromSheet() {
-      try {
-        const res = await fetch(GOOGLE_SHEETS_WEB_APP_URL);
-        const data = await res.json();
+	async function loadBookingsFromSheet() {
+	  try {
+		const res = await fetch(`${GOOGLE_SHEETS_WEB_APP_URL}?t=${Date.now()}`);
+		const data = await res.json();
 
-        if (Array.isArray(data.bookings)) {
-          bookings = data.bookings.map(b => ({
-            name: b.name || '',
-            email: (b.email || '').toLowerCase(),
-            group: b.group || '',
-            date: b.date || '',
-            shift: b.shift || '',
-            section: b.section || ''
-          }));
-          renderSlots();
-        }
-      } catch (err) {
-        console.error('Failed to load bookings:', err);
-      }
-    }
+		const rows = Array.isArray(data.bookings)
+		  ? data.bookings
+		  : Array.isArray(data.data)
+		  ? data.data
+		  : [];
+
+		bookings = rows.map(b => ({
+		  name: b.name || b.Name || b[1] || '',
+		  email: (b.email || b.Email || b[2] || '').toLowerCase(),
+		  group: b.group || b.Group || b[3] || '',
+		  date: b.date || b.Date || b[4] || '',
+		  shift: b.shift || b.Shift || b[5] || '',
+		  section: b.section || b.Section || b[6] || ''
+		}));
+
+		renderSlots();
+	  } catch (err) {
+		console.error('Failed to load bookings:', err);
+		bookingRows.innerHTML = '<tr><td colspan=\"5\" class=\"empty\">Unable to load current bookings.</td></tr>';
+	  }
+	}
+
 
     function renderTable() {
       bookingRows.innerHTML = '';
@@ -449,54 +456,55 @@
       renderSlots();
     };
 
-    document.getElementById('saveSchedule').onclick = async () => {
-      const me = myIdentity();
+	document.getElementById('saveSchedule').onclick = async () => {
+	  const me = myIdentity();
 
-      if (!me.name || !me.email || !me.group) {
-        saveStatus.textContent = 'Fill in name, email, and group first.';
-        return;
-      }
+	  if (!me.name || !me.email || !me.group) {
+		saveStatus.textContent = 'Fill in name, email, and group first.';
+		return;
+	  }
 
-      const selectedEntries = Object.entries(selectedSlots)
-        .filter(([key, section]) => key.startsWith(`${selectedDate}|`) && section);
+	  const selectedEntries = Object.entries(selectedSlots)
+		.filter(([, section]) => section);
 
-      if (!selectedEntries.length) {
-        saveStatus.textContent = 'Select at least one section for this date.';
-        return;
-      }
+	  if (!selectedEntries.length) {
+		saveStatus.textContent = 'Select at least one section first.';
+		return;
+	  }
 
-      saveStatus.textContent = 'Saving...';
+	  saveStatus.textContent = 'Saving...';
 
-      try {
-        for (const [key, section] of selectedEntries) {
-          const [date, shift] = key.split('|');
-          const body = new URLSearchParams({
-            action: 'save',
-            name: me.name,
-            email: me.email,
-            group: me.group,
-            date,
-            shift,
-            section
-          });
+	  try {
+		for (const [key, section] of selectedEntries) {
+		  const [date, shift] = key.split('|');
+		  const body = new URLSearchParams({
+			action: 'save',
+			name: me.name,
+			email: me.email,
+			group: me.group,
+			date,
+			shift,
+			section
+		  });
 
-          await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: body.toString()
-          });
-        }
+		  await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+			method: 'POST',
+			mode: 'no-cors',
+			headers: {
+			  'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: body.toString()
+		  });
+		}
 
-        saveStatus.textContent = 'Schedule saved.';
-        await loadBookingsFromSheet();
-      } catch (err) {
-        console.error('Failed to save schedule:', err);
-        saveStatus.textContent = 'Save failed.';
-      }
-    };
+		saveStatus.textContent = 'Schedule saved.';
+		await loadBookingsFromSheet();
+	  } catch (err) {
+		console.error('Failed to save schedule:', err);
+		saveStatus.textContent = 'Save failed.';
+	  }
+	};
+
 
     document.getElementById('themeToggle').onclick = () => {
       const root = document.documentElement;
