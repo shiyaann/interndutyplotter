@@ -389,32 +389,41 @@
       renderSlots();
     };
 
-    document.getElementById('saveBooking').onclick = async () => {
-      const me = myIdentity();
-      if (!me.name || !me.email || !me.group) {
-        alert('Please enter your name, email, and group first.');
-        return;
-      }
-      if (!currentDraft) {
-        alert('Please select a slot first.');
-        return;
-      }
-      const payload = new URLSearchParams({
-        name: me.name,
-        email: me.email,
-        group: me.group,
-        date: currentDraft.date,
-        shift: currentDraft.shift,
-        section: currentDraft.section,
-        remarks: document.getElementById('remarks') ? document.getElementById('remarks').value : ''
-      });
-      try {
-        const res = await fetch(SHEETS_ENDPOINT, { method: 'POST', mode: 'no-cors', body: payload });
-        alert('Booking sent to Google Sheets.');
-      } catch (err) {
-        alert('Could not send booking.');
-      }
-    };
+	document.getElementById('saveBooking').onclick = async () => {
+	  const me = myIdentity();
+
+	  if (!me.name || !me.email || !me.group) {
+		alert('Please enter your name, email, and group first.');
+		return;
+	  }
+
+	  if (!currentDraft) {
+		alert('Please select a slot first.');
+		return;
+	  }
+
+	  const payload = new URLSearchParams({
+		name: me.name,
+		email: me.email,
+		group: me.group,
+		date: currentDraft.date,
+		shift: currentDraft.shift,
+		section: currentDraft.section,
+		remarks: document.getElementById('remarks') ? document.getElementById('remarks').value : ''
+	  });
+
+	  try {
+		const res = await fetch('https://script.google.com/macros/s/AKfycbyRRw-_LbByjtd7FGDvkI9Bkj1fFcjGVS-XJnVk_qLEV0ww9b9LCS-0kMVtPk5PYJDjkw/exec', {
+		  method: 'POST',
+		  body: payload
+		});
+
+		const data = await res.json();
+		alert(data.message || 'Booking sent.');
+	  } catch (err) {
+		alert('Could not send booking.');
+	  }
+	};
 
     document.getElementById('themeToggle').onclick = () => {
       const root = document.documentElement;
