@@ -168,12 +168,12 @@
             <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option>
           </select>
         </div>
-        <div class="notice">Prototype rule: one person can hold one slot at a time. Clicking another available slot reassigns that same person.</div>
+        <div class="notice">Prototype rule: one person can hold up to two day slots on the same date (one for 6:00 AM–12:00 PM and one for 12:00 PM–6:00 PM), but if you already chose one of those day slots, you cannot choose the overnight shift for that same date.</div>
 
         <div class="inline-actions" style="margin-top:1rem;">
           <button class="primary-btn" id="clearMine">Clear my booking</button>
-          <button class="ghost-btn" id="seedDemo">Load demo data</button>
-        </div>
+          <button class="ghost-btn" id="saveBooking">Save booking</button>
+                  </div>
 
         <div style="margin-top:1.5rem;">
           <h2>Legend</h2>
@@ -242,6 +242,7 @@
 
     let selectedDate = dates[0];
     let bookings = [];
+    let currentDraft = null;
 
     const dayTabs = document.getElementById('dayTabs');
     const shiftGrid = document.getElementById('shiftGrid');
@@ -320,20 +321,49 @@
       renderTable();
     }
 
+    function hasBookedDayShift(date, shift) {
+      const me = myIdentity();
+      return bookings.some(b => b.name === me.name && b.email === me.email && b.date === date && b.shift === shift);
+    }
+
+    function hasBookedDay(date) {
+      const me = myIdentity();
+      return bookings.some(b => b.name === me.name && b.email === me.email && b.date === date && (b.shift === '6:00 AM–12:00 PM' || b.shift === '12:00 PM–6:00 PM'));
+    }
+
+    function hasBookedOvernight(date) {
+      const me = myIdentity();
+      return bookings.some(b => b.name === me.name && b.email === me.email && b.date === date && b.shift === '3:00 PM/7:00 PM–7:00 AM');
+    }
+
     function claimSlot(section, shift, max, used) {
       const me = myIdentity();
       if (!me.name || !me.email || !me.group) {
         alert('Please enter your name, email, and group first.');
         return;
       }
-      const existingIndex = myBookingIndex();
-      const alreadyHere = bookings.some(b => b.name === me.name && b.email === me.email && b.date === selectedDate && b.shift === shift && b.section === section);
+      const isOvernight = shift === '3:00 PM/7:00 PM–7:00 AM';
+      if (isOvernight && hasBookedDay(selectedDate)) {
+        alert('You cannot choose the overnight shift if you already have a 6:00 AM–12:00 PM or 12:00 PM–6:00 PM booking on the same date.');
+        return;
+      }
+      if (!isOvernight && hasBookedOvernight(selectedDate)) {
+        alert('You cannot choose a 6:00 AM–12:00 PM or 12:00 PM–6:00 PM booking if you already have an overnight booking on the same date.');
+        return;
+      }
+      const existingIndex = bookings.findIndex(b => b.name === me.name && b.email === me.email && b.date === selectedDate && b.shift === shift && b.section === section);
+      const alreadyHere = existingIndex >= 0;
       if (used >= max && !alreadyHere) {
         alert('That slot is already full.');
         return;
       }
+      if (!alreadyHere && hasBookedDayShift(selectedDate, shift)) {
+        alert('You already have a booking for this date and shift.');
+        return;
+      }
       if (existingIndex >= 0) bookings.splice(existingIndex, 1);
       bookings.push({ ...me, date: selectedDate, shift, section });
+      currentDraft = { ...me, date: selectedDate, shift, section };
       renderSlots();
     }
 
@@ -359,18 +389,17 @@
       renderSlots();
     };
 
-    document.getElementById('seedDemo').onclick = () => {
-      bookings = [
-        {name:'Ana Cruz', email:'ana@example.com', group:'A', date:'Jun 14', shift:'6:00 AM–12:00 PM', section:'Preanalytic'},
-        {name:'Ben Reyes', email:'ben@example.com', group:'B', date:'Jun 14', shift:'6:00 AM–12:00 PM', section:'Preanalytic'},
-        {name:'Cara Lim', email:'cara@example.com', group:'C', date:'Jun 14', shift:'6:00 AM–12:00 PM', section:'Blood Bank'},
-        {name:'Dean Ong', email:'dean@example.com', group:'D', date:'Jun 14', shift:'6:00 AM–12:00 PM', section:'Microbiology'},
-        {name:'Elle Tan', email:'elle@example.com', group:'E', date:'Jun 14', shift:'12:00 PM–6:00 PM', section:'Histopathology'},
-        {name:'Fran Solis', email:'fran@example.com', group:'F', date:'Jun 14', shift:'12:00 PM–6:00 PM', section:'Histopathology'},
-        {name:'Gio Pascual', email:'gio@example.com', group:'G', date:'Jun 14', shift:'3:00 PM/7:00 PM–7:00 AM', section:'Microbiology'},
-        {name:'Hana Cruz', email:'hana@example.com', group:'A', date:'Jun 14', shift:'3:00 PM/7:00 PM–7:00 AM', section:'Blood Bank'}
-      ];
-      renderSlots();
+    document.getElementById('saveBooking').onclick = () => {
+      const me = myIdentity();
+      if (!me.name || !me.email || !me.group) {
+        alert('Please enter your name, email, and group first.');
+        return;
+      }
+      if (!currentDraft) {
+        alert('Please select a slot first.');
+        return;
+      }
+      alert('Booking saved.');
     };
 
     document.getElementById('themeToggle').onclick = () => {
