@@ -71,7 +71,12 @@
       border-radius: var(--radius-md);
       font: inherit;
     }
-    .theme-btn, .ghost-btn, .primary-btn { padding: .75rem 1rem; background: var(--color-surface-2); color: var(--color-text); cursor:pointer; }
+    .theme-btn, .ghost-btn, .primary-btn {
+      padding: .75rem 1rem;
+      background: var(--color-surface-2);
+      color: var(--color-text);
+      cursor:pointer;
+    }
     .primary-btn { background: var(--color-primary); color: white; border-color: transparent; }
     .primary-btn:hover { background: var(--color-primary-hover); }
     .panel-grid { display:grid; grid-template-columns: 320px 1fr; gap: var(--space-6); }
@@ -94,10 +99,19 @@
     .content-head { display:flex; justify-content:space-between; align-items:flex-end; gap: var(--space-4); margin-bottom: var(--space-5); }
     .day-tabs { display:flex; flex-wrap:wrap; gap:.5rem; }
     .day-tab {
-      padding:.65rem .85rem; border-radius:999px; border:1px solid rgba(0,0,0,.08); background:var(--color-surface-2); cursor:pointer;
+      padding:.65rem .85rem;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.08);
+      background:var(--color-surface-2);
+      cursor:pointer;
       color: var(--color-text-muted);
     }
-    .day-tab.active { background: var(--color-primary-highlight); color: var(--color-primary); border-color: transparent; font-weight:700; }
+    .day-tab.active {
+      background: var(--color-primary-highlight);
+      color: var(--color-primary);
+      border-color: transparent;
+      font-weight:700;
+    }
     .shift-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--space-5); }
     .shift-card {
       background: var(--color-surface-2);
@@ -110,8 +124,15 @@
     .shift-card p { margin:0 0 var(--space-4); color: var(--color-text-muted); font-size: var(--text-sm); }
     .slot-list { display:grid; gap: .75rem; }
     .slot-btn {
-      width:100%; text-align:left; padding: .95rem 1rem; background: var(--color-surface); cursor:pointer;
-      display:flex; justify-content:space-between; align-items:center; gap:1rem;
+      width:100%;
+      text-align:left;
+      padding: .95rem 1rem;
+      background: var(--color-surface);
+      cursor:pointer;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:1rem;
     }
     .slot-btn:hover { border-color: var(--color-primary); }
     .slot-btn.full { opacity:.55; cursor:not-allowed; }
@@ -128,10 +149,18 @@
     th, td { padding: .8rem; border-bottom:1px solid rgba(0,0,0,.08); text-align:left; }
     th { color: var(--color-text-muted); font-weight:600; }
     .empty { color: var(--color-text-faint); font-size: var(--text-sm); }
-    .inline-actions { display:flex; gap:.75rem; flex-wrap:wrap; }
+    .inline-actions { display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; }
     .notice {
-      margin-top: var(--space-4); padding: .9rem 1rem; border-radius: var(--radius-md); background: var(--color-surface);
-      color: var(--color-text-muted); font-size: var(--text-sm);
+      margin-top: var(--space-4);
+      padding: .9rem 1rem;
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+    .status-text {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
     }
     @media (max-width: 960px) {
       .panel-grid, .shift-grid { grid-template-columns: 1fr; }
@@ -145,7 +174,7 @@
     <div class="topbar">
       <div>
         <h1>Intern Duty Plotter</h1>
-        <div class="sub">A prototype self-plotting page for make-up duties. Users choose a date, shift, and laboratory section, then claim one available slot. Each section shows remaining capacity visually, including the new overnight duty option.</div>
+        <div class="sub">Choose a date and duty section. Selections are tracked per shift, and current bookings are pulled from your sheet.</div>
       </div>
       <button class="theme-btn" id="themeToggle" aria-label="Toggle theme">Toggle theme</button>
     </div>
@@ -168,20 +197,21 @@
             <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option>
           </select>
         </div>
-        <div class="notice">Prototype rule: one person can hold up to two day slots on the same date (one for 6:00 AM–12:00 PM and one for 12:00 PM–6:00 PM), but if you already chose one of those day slots, you cannot choose the overnight shift for that same date.</div>
+        <div class="notice">Rules: one selection per shift, clicking the same section again unselects it, and night locks day/afternoon while day or afternoon locks night.</div>
 
         <div class="inline-actions" style="margin-top:1rem;">
-          <button class="primary-btn" id="clearMine">Clear my booking</button>
-          <button class="ghost-btn" id="saveBooking">Save booking</button>
-          </div>
+          <button class="primary-btn" id="saveSchedule">Save schedule</button>
+          <button class="ghost-btn" id="clearMine">Clear my booking</button>
+          <span class="status-text" id="saveStatus"></span>
+        </div>
 
         <div style="margin-top:1.5rem;">
           <h2>Legend</h2>
           <div class="legend">
             <div class="legend-item"><span class="dot" style="background:#437a22"></span>Available</div>
             <div class="legend-item"><span class="dot" style="background:#d19900"></span>Limited</div>
-            <div class="legend-item"><span class="dot" style="background:#a12c7b"></span>Full</div>
-            <div class="legend-item"><span class="dot" style="background:#01696f"></span>Your booking</div>
+            <div class="legend-item"><span class="dot" style="background:#a12c7b"></span>Full / Locked</div>
+            <div class="legend-item"><span class="dot" style="background:#01696f"></span>Selected</div>
           </div>
         </div>
 
@@ -200,15 +230,15 @@
         <div class="content-head">
           <div>
             <h2 style="margin:0 0 .35rem;">Available slots</h2>
-            <div class="sub">Select a date, then choose from day or overnight duty slots. Full sections are locked automatically in this prototype.</div>
+            <div class="sub">Select a date, then choose sections by shift. Bookings below refresh from Google Sheets.</div>
           </div>
           <div class="day-tabs" id="dayTabs"></div>
         </div>
 
         <div class="shift-grid" id="shiftGrid"></div>
 
-        <div class="panel table-wrap">
-          <h2>Current bookings</h2>
+        <div class="table-wrap panel" style="margin-top:1.5rem;">
+          <h2 style="margin-top:0;">Current bookings</h2>
           <table>
             <thead>
               <tr>
@@ -240,9 +270,10 @@
       'Histopathology': 2
     };
 
+    const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyBJjNb0dPxqMCO0Rdn4KWylPBIs6W1IFgZ6bHBmSqWKIlrWuKT7zXt3eguHPoNOuLCOg/exec';
     let selectedDate = dates[0];
     let bookings = [];
-    let currentDraft = null;
+    const selectedSlots = {};
 
     const dayTabs = document.getElementById('dayTabs');
     const shiftGrid = document.getElementById('shiftGrid');
@@ -250,10 +281,7 @@
     const nameInput = document.getElementById('internName');
     const emailInput = document.getElementById('internEmail');
     const groupInput = document.getElementById('internGroup');
-
-    function keyFor(date, shift, section) {
-      return `${date}||${shift}||${section}`;
-    }
+    const saveStatus = document.getElementById('saveStatus');
 
     function countFor(date, shift, section) {
       return bookings.filter(b => b.date === date && b.shift === shift && b.section === section).length;
@@ -267,25 +295,22 @@
       };
     }
 
-    function myBookingIndex() {
-      const me = myIdentity();
-      if (!me.name || !me.email) return -1;
-      return bookings.findIndex(b => b.name === me.name && b.email === me.email);
-    }
-
     function renderTabs() {
       dayTabs.innerHTML = '';
       dates.forEach(date => {
         const btn = document.createElement('button');
         btn.className = 'day-tab' + (date === selectedDate ? ' active' : '');
         btn.textContent = date;
-        btn.onclick = () => { selectedDate = date; renderTabs(); renderSlots(); };
+        btn.onclick = () => {
+          selectedDate = date;
+          renderTabs();
+          renderSlots();
+        };
         dayTabs.appendChild(btn);
       });
     }
 
-    function statusBadge(used, max, mine) {
-      if (mine) return ['Your booking', 'minepill'];
+    function statusBadge(used, max) {
       if (used >= max) return ['Full', 'fullpill'];
       if (max - used === 1) return ['Limited', 'limited'];
       return [`${max - used} left`, 'available'];
@@ -293,11 +318,16 @@
 
     function renderSlots() {
       shiftGrid.innerHTML = '';
+
       shifts.forEach(shift => {
         const card = document.createElement('section');
         card.className = 'shift-card';
-        const totalCap = Object.values(capacities).reduce((a,b)=>a+b,0);
-        const totalUsed = Object.entries(capacities).reduce((sum,[section,max])=>sum + countFor(selectedDate, shift, section),0);
+
+        const totalCap = Object.values(capacities).reduce((a, b) => a + b, 0);
+        const totalUsed = Object.entries(capacities).reduce((sum, [section]) => {
+          return sum + countFor(selectedDate, shift, section);
+        }, 0);
+
         card.innerHTML = `<h3>${shift}</h3><p>${selectedDate} · ${totalUsed}/${totalCap} slots filled</p>`;
 
         const list = document.createElement('div');
@@ -305,77 +335,107 @@
 
         Object.entries(capacities).forEach(([section, max]) => {
           const used = countFor(selectedDate, shift, section);
-          const me = myIdentity();
-          const mine = bookings.some(b => b.date === selectedDate && b.shift === shift && b.section === section && b.name === me.name && b.email === me.email);
-          const [label, klass] = statusBadge(used, max, mine);
+          const [label, klass] = statusBadge(used, max);
+
+          const slotKey = `${selectedDate}|${shift}`;
+          const isSelected = selectedSlots[slotKey] === section;
+
+          const hasDay = !!selectedSlots[`${selectedDate}|6:00 AM–12:00 PM`];
+          const hasAfternoon = !!selectedSlots[`${selectedDate}|12:00 PM–6:00 PM`];
+          const hasNight = !!selectedSlots[`${selectedDate}|3:00 PM/7:00 PM–7:00 AM`];
+
+          const nightLocked = shift === '3:00 PM/7:00 PM–7:00 AM' && (hasDay || hasAfternoon);
+          const dayAfternoonLocked = (shift === '6:00 AM–12:00 PM' || shift === '12:00 PM–6:00 PM') && hasNight;
+          const locked = nightLocked || dayAfternoonLocked;
+
           const btn = document.createElement('button');
-          btn.className = 'slot-btn' + (used >= max && !mine ? ' full' : '') + (mine ? ' mine' : '');
-          btn.innerHTML = `<div class="slot-meta"><strong>${section}</strong><span>${used}/${max} occupied</span></div><span class="pill ${klass}">${label}</span>`;
-          btn.onclick = () => claimSlot(section, shift, max, used);
+          btn.className = 'slot-btn' + (used >= max ? ' full' : '') + (isSelected ? ' mine' : '') + (locked && !isSelected ? ' full' : '');
+          btn.disabled = (used >= max && !isSelected) || (locked && !isSelected);
+          btn.innerHTML = `
+            <div class="slot-meta">
+              <strong>${section}</strong>
+              <span>${used}/${max} occupied</span>
+            </div>
+            <span class="pill ${isSelected ? 'minepill' : (locked ? 'fullpill' : klass)}">
+              ${isSelected ? 'Selected' : (locked ? 'Locked' : label)}
+            </span>
+          `;
+          btn.onclick = () => toggleSlot(section, shift);
           list.appendChild(btn);
         });
 
         card.appendChild(list);
         shiftGrid.appendChild(card);
       });
+
       renderTable();
     }
 
-    function hasBookedDayShift(date, shift) {
-      const me = myIdentity();
-      return bookings.some(b => b.name === me.name && b.email === me.email && b.date === date && b.shift === shift);
-    }
-
-    function hasBookedDay(date) {
-      const me = myIdentity();
-      return bookings.some(b => b.name === me.name && b.email === me.email && b.date === date && (b.shift === '6:00 AM–12:00 PM' || b.shift === '12:00 PM–6:00 PM'));
-    }
-
-    function hasBookedOvernight(date) {
-      const me = myIdentity();
-      return bookings.some(b => b.name === me.name && b.email === me.email && b.date === date && b.shift === '3:00 PM/7:00 PM–7:00 AM');
-    }
-
-    function claimSlot(section, shift, max, used) {
+    function toggleSlot(section, shift) {
       const me = myIdentity();
       if (!me.name || !me.email || !me.group) {
         alert('Please enter your name, email, and group first.');
         return;
       }
-      const isOvernight = shift === '3:00 PM/7:00 PM–7:00 AM';
-      if (isOvernight && hasBookedDay(selectedDate)) {
-        alert('You cannot choose the overnight shift if you already have a 6:00 AM–12:00 PM or 12:00 PM–6:00 PM booking on the same date.');
+
+      const slotKey = `${selectedDate}|${shift}`;
+      const hasDay = !!selectedSlots[`${selectedDate}|6:00 AM–12:00 PM`];
+      const hasAfternoon = !!selectedSlots[`${selectedDate}|12:00 PM–6:00 PM`];
+      const hasNight = !!selectedSlots[`${selectedDate}|3:00 PM/7:00 PM–7:00 AM`];
+
+      const nightLocked = shift === '3:00 PM/7:00 PM–7:00 AM' && (hasDay || hasAfternoon);
+      const dayAfternoonLocked = (shift === '6:00 AM–12:00 PM' || shift === '12:00 PM–6:00 PM') && hasNight;
+
+      if ((nightLocked || dayAfternoonLocked) && selectedSlots[slotKey] !== section) {
         return;
       }
-      if (!isOvernight && hasBookedOvernight(selectedDate)) {
-        alert('You cannot choose a 6:00 AM–12:00 PM or 12:00 PM–6:00 PM booking if you already have an overnight booking on the same date.');
-        return;
+
+      if (selectedSlots[slotKey] === section) {
+        delete selectedSlots[slotKey];
+      } else {
+        selectedSlots[slotKey] = section;
       }
-      const existingIndex = bookings.findIndex(b => b.name === me.name && b.email === me.email && b.date === selectedDate && b.shift === shift && b.section === section);
-      const alreadyHere = existingIndex >= 0;
-      if (used >= max && !alreadyHere) {
-        alert('That slot is already full.');
-        return;
-      }
-      if (!alreadyHere && hasBookedDayShift(selectedDate, shift)) {
-        alert('You already have a booking for this date and shift.');
-        return;
-      }
-      if (existingIndex >= 0) bookings.splice(existingIndex, 1);
-      bookings.push({ ...me, date: selectedDate, shift, section });
-      currentDraft = { ...me, date: selectedDate, shift, section };
+
       renderSlots();
+    }
+
+    async function loadBookingsFromSheet() {
+      try {
+        const res = await fetch('https://script.google.com/macros/s/AKfycbzD0raz-pGuIW9FE5-24f4kPy4G1yfAlH-W2uZ4iV6L/dev');
+        const data = await res.json();
+
+        if (Array.isArray(data.bookings)) {
+          bookings = data.bookings.map(b => ({
+            name: b.name || '',
+            email: (b.email || '').toLowerCase(),
+            group: b.group || '',
+            date: b.date || '',
+            shift: b.shift || '',
+            section: b.section || ''
+          }));
+          renderSlots();
+        }
+      } catch (err) {
+        console.error('Failed to load bookings:', err);
+      }
     }
 
     function renderTable() {
       bookingRows.innerHTML = '';
+
       if (!bookings.length) {
         bookingRows.innerHTML = '<tr><td colspan="5" class="empty">No bookings yet.</td></tr>';
         return;
       }
+
       bookings
         .slice()
-        .sort((a,b) => a.date.localeCompare(b.date) || a.shift.localeCompare(b.shift) || a.section.localeCompare(b.section) || a.name.localeCompare(b.name))
+        .sort((a, b) =>
+          a.date.localeCompare(b.date) ||
+          a.shift.localeCompare(b.shift) ||
+          a.section.localeCompare(b.section) ||
+          a.name.localeCompare(b.name)
+        )
         .forEach(b => {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>${b.name}</td><td>${b.group}</td><td>${b.date}</td><td>${b.shift}</td><td>${b.section}</td>`;
@@ -384,46 +444,59 @@
     }
 
     document.getElementById('clearMine').onclick = () => {
-      const idx = myBookingIndex();
-      if (idx >= 0) bookings.splice(idx, 1);
+      Object.keys(selectedSlots).forEach(key => delete selectedSlots[key]);
+      saveStatus.textContent = 'Selections cleared.';
       renderSlots();
     };
 
-	document.getElementById('saveBooking').onclick = async () => {
-	  const me = myIdentity();
-	
-	  if (!me.name || !me.email || !me.group) {
-	    alert('Please enter your name, email, and group first.');
-	    return;
-	  }
-	
-	  if (!currentDraft) {
-	    alert('Please select a slot first.');
-	    return;
-	  }
-	
-	  const payload = new URLSearchParams({
-	    name: me.name,
-	    email: me.email,
-	    group: me.group,
-	    date: currentDraft.date,
-	    shift: currentDraft.shift,
-	    section: currentDraft.section,
-	    remarks: document.getElementById('remarks') ? document.getElementById('remarks').value : ''
-	  });
-	
-	  try {
-	    await fetch('https://script.google.com/macros/s/AKfycbwOt9QnSBhaRCx4exfprlY2IuC_tSN8_TezEhaHeHY450N4iALWab24jvglV-CVicn1_A/exec', {
-	      method: 'POST',
-	      mode: 'no-cors',
-	      body: payload
-	    });
-	
-	    alert('Booking submitted to Google Sheets.');
-	  } catch (err) {
-	    alert('Could not send booking.');
-	  }
-	};
+    document.getElementById('saveSchedule').onclick = async () => {
+      const me = myIdentity();
+
+      if (!me.name || !me.email || !me.group) {
+        saveStatus.textContent = 'Fill in name, email, and group first.';
+        return;
+      }
+
+      const selectedEntries = Object.entries(selectedSlots)
+        .filter(([key, section]) => key.startsWith(`${selectedDate}|`) && section);
+
+      if (!selectedEntries.length) {
+        saveStatus.textContent = 'Select at least one section for this date.';
+        return;
+      }
+
+      saveStatus.textContent = 'Saving...';
+
+      try {
+        for (const [key, section] of selectedEntries) {
+          const [date, shift] = key.split('|');
+          const body = new URLSearchParams({
+            action: 'save',
+            name: me.name,
+            email: me.email,
+            group: me.group,
+            date,
+            shift,
+            section
+          });
+
+          await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body.toString()
+          });
+        }
+
+        saveStatus.textContent = 'Schedule saved.';
+        await loadBookingsFromSheet();
+      } catch (err) {
+        console.error('Failed to save schedule:', err);
+        saveStatus.textContent = 'Save failed.';
+      }
+    };
 
     document.getElementById('themeToggle').onclick = () => {
       const root = document.documentElement;
@@ -432,6 +505,7 @@
 
     renderTabs();
     renderSlots();
+    loadBookingsFromSheet();
   </script>
 </body>
 </html>
